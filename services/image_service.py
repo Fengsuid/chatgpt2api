@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import io
+import threading
+import time
 import zipfile
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +13,7 @@ from PIL import Image, ImageOps
 
 from services.config import config
 from services.image_tags_service import load_tags, remove_tags
+from utils.log import logger
 
 THUMBNAIL_SIZE = (320, 320)
 
@@ -177,6 +180,96 @@ def delete_images(paths: list[str] | None = None, start_date: str = "", end_date
     return {"removed": removed}
 
 
+def storage_stats() -> dict:
+    import shutil
+    usage = shutil.disk_usage(config.images_dir)
+    total_mb = usage.total // (1024 * 1024)
+    used_mb = usage.used // (1024 * 1024)
+    free_mb = usage.free // (1024 * 1024)
+
+    image_count = 0
+    image_size = 0
+    for p in config.images_dir.rglob("*"):
+        if p.is_file():
+            image_count += 1
+            image_size += p.stat().st_size
+
+    return {
+        "disk_total_mb": total_mb,
+        "disk_used_mb": used_mb,
+        "disk_free_mb": free_mb,
+        "image_count": image_count,
+        "image_size_mb": image_size // (1024 * 1024),
+        "image_size_bytes": image_size,
+    }
+
+
+def compress_images(quality: int = 60) -> dict:
+    """重新压缩所有图片，返回节省的空间"""
+    saved = 0
+    count = 0
+    for p in sorted(config.images_dir.rglob("*.png")):
+        if not p.is_file():
+            continue
+        try:
+            orig = p.stat().st_size
+            with Image.open(p) as img:
+                img = ImageOps.exif_transpose(img)
+                img.save(str(p) + ".tmp", format="PNG", optimize=True)
+            new_size = Path(str(p) + ".tmp").stat().st_size
+            if new_size < orig:
+                Path(str(p) + ".tmp").replace(p)
+                saved += orig - new_size
+                count += 1
+            else:
+                Path(str(p) + ".tmp").unlink()
+        except Exception:
+            pass
+    return {"compressed": count, "saved_bytes": saved, "saved_mb": saved // (1024 * 1024)}
+
+
+def delete_to_target(target_free_mb: int, dry_run: bool = False) -> dict:
+    """删除最旧的图片直到剩余空间达到 target_free_mb"""
+    import shutil
+    usage = shutil.disk_usage(config.images_dir)
+    current_free = usage.free // (1024 * 1024)
+    if current_free >= target_free_mb and not dry_run:
+        return {"removed": 0, "current_free_mb": current_free, "target_free_mb": target_free_mb, "done": True}
+
+    files = sorted(
+        (p for p in config.images_dir.rglob("*.png") if p.is_file()),
+        key=lambda p: p.stat().st_mtime,
+    )
+    removed = 0
+    freed = 0
+    for p in files:
+        if current_free + freed // (1024 * 1024) >= target_free_mb:
+            break
+        size = p.stat().st_size
+        if not dry_run:
+            rel = p.relative_to(config.images_dir).as_posix()
+            for tp in (_thumbnail_path(rel), config.image_thumbnails_dir / _safe_relative_path(rel)):
+                if tp.is_file():
+                    tp.unlink()
+            remove_tags(rel)
+            p.unlink()
+        freed += size
+        removed += 1
+
+    if not dry_run:
+        _cleanup_empty_dirs(config.images_dir)
+        _cleanup_empty_dirs(config.image_thumbnails_dir)
+
+    return {
+        "removed": removed,
+        "freed_mb": freed // (1024 * 1024),
+        "target_free_mb": target_free_mb,
+        "current_free_mb": current_free + (freed // (1024 * 1024)),
+        "done": (current_free + freed // (1024 * 1024)) >= target_free_mb,
+        "dry_run": dry_run,
+    }
+
+
 def download_images_zip(paths: list[str]) -> io.BytesIO:
     root = config.images_dir.resolve()
     buf = io.BytesIO()
@@ -207,3 +300,30 @@ def download_images_zip(paths: list[str]) -> io.BytesIO:
         raise HTTPException(status_code=404, detail="no images found")
     buf.seek(0)
     return buf
+
+
+def _auto_cleanup_worker(stop_event: threading.Event) -> None:
+    """后台线程：每30分钟检查存储，空间低于阈值自动清理最旧图片"""
+    import shutil
+    min_free_mb = getattr(config, "image_min_free_mb", None)
+    if min_free_mb is None:
+        min_free_mb = 500
+
+    while not stop_event.wait(1800):  # 每30分钟
+        try:
+            config.cleanup_old_images()
+            cleanup_image_thumbnails()
+            usage = shutil.disk_usage(config.images_dir)
+            free_mb = usage.free // (1024 * 1024)
+            if free_mb < min_free_mb:
+                logger.info({"event": "image_auto_cleanup", "free_mb": free_mb, "min_free_mb": min_free_mb})
+                result = delete_to_target(min_free_mb)
+                logger.info({"event": "image_auto_cleanup_done", **result})
+        except Exception:
+            pass
+
+
+def start_image_cleanup_scheduler(stop_event: threading.Event) -> threading.Thread:
+    t = threading.Thread(target=_auto_cleanup_worker, args=(stop_event,), daemon=True, name="image-cleanup")
+    t.start()
+    return t

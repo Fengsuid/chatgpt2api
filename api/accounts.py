@@ -144,7 +144,12 @@ def create_router() -> APIRouter:
     @router.get("/api/accounts")
     async def get_accounts(authorization: str | None = Header(default=None)):
         require_admin(authorization)
-        return {"items": account_service.list_accounts()}
+        return {"items": account_service.list_accounts(), "stats": account_service.get_stats()}
+
+    @router.get("/api/accounts/stats")
+    async def get_account_stats(authorization: str | None = Header(default=None)):
+        require_admin(authorization)
+        return account_service.get_stats()
 
     @router.post("/api/accounts")
     async def create_accounts(body: AccountCreateRequest, authorization: str | None = Header(default=None)):

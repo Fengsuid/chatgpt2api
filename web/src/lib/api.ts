@@ -485,6 +485,26 @@ export async function deleteImageTag(tag: string) {
   });
 }
 
+export type ImageStorageStats = {
+  disk_total_mb: number; disk_used_mb: number; disk_free_mb: number;
+  image_count: number; image_size_mb: number; image_size_bytes: number;
+};
+
+export async function fetchImageStorage() {
+  return httpRequest<ImageStorageStats>("/api/images/storage");
+}
+
+export async function compressAllImages() {
+  return httpRequest<{ compressed: number; saved_bytes: number; saved_mb: number }>("/api/images/storage/compress", { method: "POST" });
+}
+
+export async function deleteToTarget(targetFreeMb: number) {
+  return httpRequest<{ removed: number; freed_mb: number; done: boolean }>(
+    `/api/images/storage/cleanup-to-target?target_free_mb=${targetFreeMb}&dry_run=false`,
+    { method: "POST" },
+  );
+}
+
 export async function fetchSystemLogs(filters: { type?: string; start_date?: string; end_date?: string }) {
   const params = new URLSearchParams();
   if (filters.type) params.set("type", filters.type);

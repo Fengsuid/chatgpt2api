@@ -3,7 +3,8 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Condition, Lock
 from typing import Any
-from datetime import datetime
+from datetime import datetime, timezone
+from pathlib import Path
 
 from services.config import config
 from services.log_service import (
@@ -24,6 +25,30 @@ class AccountService:
         self._index = 0
         self._accounts = self._load_accounts()
         self._image_inflight: dict[str, int] = {}
+        self._cumulative_total = self._load_cumulative_total()
+
+    def _get_cumulative_file(self) -> Path:
+        from services.config import DATA_DIR
+        return DATA_DIR / ".cumulative_total"
+
+    def _load_cumulative_total(self) -> int:
+        try:
+            f = self._get_cumulative_file()
+            if f.exists():
+                return int(f.read_text().strip())
+        except Exception:
+            pass
+        return len(self._accounts)
+
+    def _save_cumulative_total(self) -> None:
+        try:
+            self._get_cumulative_file().write_text(str(self._cumulative_total))
+        except Exception:
+            pass
+
+    @staticmethod
+    def _now() -> str:
+        return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
     def _load_accounts(self) -> dict[str, dict]:
         accounts = self.storage.load_accounts()
@@ -67,6 +92,7 @@ class AccountService:
         normalized["success"] = int(normalized.get("success") or 0)
         normalized["fail"] = int(normalized.get("fail") or 0)
         normalized["last_used_at"] = normalized.get("last_used_at")
+        normalized["created_at"] = normalized.get("created_at") or AccountService._now()
         return normalized
 
     def list_tokens(self) -> list[str]:
@@ -192,6 +218,10 @@ class AccountService:
                    and (token := item.get("access_token") or "")
             ]
 
+    def add_account_items(self, items: list[dict]) -> dict:
+        tokens = [str(item.get("access_token") or "").strip() for item in items if isinstance(item, dict)]
+        return self.add_accounts(tokens)
+
     def add_accounts(self, tokens: list[str]) -> dict:
         tokens = list(dict.fromkeys(token for token in tokens if token))
         if not tokens:
@@ -204,7 +234,9 @@ class AccountService:
                 current = self._accounts.get(access_token)
                 if current is None:
                     added += 1
-                    current = {}
+                    self._cumulative_total += 1
+                    self._save_cumulative_total()
+                    current = {"created_at": self._now()}
                 else:
                     skipped += 1
                 account = self._normalize_account(
@@ -336,6 +368,45 @@ class AccountService:
             "refreshed": refreshed,
             "errors": errors,
             "items": self.list_accounts(),
+        }
+
+
+    def get_stats(self) -> dict:
+        with self._lock:
+            items = list(self._accounts.values())
+        total = len(items)
+        active = sum(1 for a in items if a.get("status") == "正常")
+        limited = sum(1 for a in items if a.get("status") == "限流")
+        abnormal = sum(1 for a in items if a.get("status") == "异常")
+        disabled = sum(1 for a in items if a.get("status") == "禁用")
+        total_quota = sum(max(0, int(a.get("quota") or 0)) for a in items if a.get("status") == "正常")
+        unlimited = sum(1 for a in items if a.get("status") == "正常" and bool(a.get("image_quota_unknown")))
+        total_success = sum(int(a.get("success") or 0) for a in items)
+        total_fail = sum(int(a.get("fail") or 0) for a in items)
+        by_type = {}
+        for a in items:
+            t = a.get("type", "unknown")
+            by_type[t] = by_type.get(t, 0) + 1
+        return {
+            "total": total,
+            "cumulative_total": self._cumulative_total,
+            "active": active,
+            "limited": limited,
+            "abnormal": abnormal,
+            "disabled": disabled,
+            "total_quota": total_quota,
+            "unlimited_quota_count": unlimited,
+            "total_success": total_success,
+            "total_fail": total_fail,
+            "by_type": by_type,
+        }
+
+    def account_health(self) -> dict:
+        stats = self.get_stats()
+        return {
+            "healthy": stats["active"] > 0 or stats["unlimited_quota_count"] > 0,
+            "status": "ok" if stats["active"] > 0 else "degraded",
+            **stats,
         }
 
 

@@ -602,6 +602,7 @@ function AccountsPageContent() {
                     <th className="w-28 px-4 py-3">类型</th>
                     <th className="w-24 px-4 py-3">状态</th>
                     <th className="w-56 px-4 py-3">账号信息</th>
+                    <th className="w-32 px-4 py-3">创建时间</th>
                     <th className="w-24 px-4 py-3">额度</th>
                     <th className="w-40 px-4 py-3">恢复时间</th>
                     <th className="w-18 px-4 py-3">成功</th>
@@ -664,6 +665,17 @@ function AccountsPageContent() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="text-xs leading-5 text-stone-500">{account.email ?? "—"}</div>
+                        </td>
+                        <td className="px-4 py-3 text-xs leading-5 text-stone-500">
+                          {(() => {
+                            const raw = (account as any).created_at;
+                            if (!raw) return "—";
+                            try {
+                              const d = new Date(raw + "Z");
+                              if (isNaN(d.getTime())) return String(raw).slice(0, 10);
+                              return d.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+                            } catch { return String(raw).slice(0, 10); }
+                          })()}
                         </td>
                         <td className="px-4 py-3">
                           <Badge variant="info" className="rounded-md">
