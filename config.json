@@ -46,5 +46,27 @@
       "images": false
     }
   },
-  "image_account_concurrency": 3
+  "image_account_concurrency": 3,
+  "proxy_runtime": {
+    "enabled": false,
+    "egress_mode": "direct",
+    "proxy_url": "",
+    "resource_proxy_url": "",
+    "skip_ssl_verify": false,
+    "reset_session_status_codes": [
+      403
+    ],
+    "clearance": {
+      "enabled": false,
+      "mode": "none",
+      "cf_cookies": "",
+      "cf_clearance": "",
+      "user_agent": "",
+      "browser": "chrome",
+      "flaresolverr_url": "",
+      "timeout_sec": 60,
+      "refresh_interval": 3600,
+      "warm_up_on_start": false
+    }
+  }
 }

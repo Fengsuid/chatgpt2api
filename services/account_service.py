@@ -303,7 +303,11 @@ class AccountService:
 
         try:
             from services.openai_backend_api import InvalidAccessTokenError, OpenAIBackendAPI
-            result = OpenAIBackendAPI(access_token).get_user_info()
+            backend = OpenAIBackendAPI(access_token)
+            try:
+                result = backend.get_user_info()
+            finally:
+                backend.close()
         except InvalidAccessTokenError:
             self.remove_invalid_token(access_token, event)
             raise
