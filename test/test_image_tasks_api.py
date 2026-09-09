@@ -70,7 +70,7 @@ class ImageTasksApiTests(unittest.TestCase):
         response = self.client.post(
             "/api/image-tasks/generations",
             headers=AUTH_HEADERS,
-            json={"client_task_id": "task-1", "prompt": "cat", "model": "gpt-image-2"},
+            json={"client_task_id": "task-1", "prompt": "cat", "model": "gpt-image-2.5"},
         )
 
         self.assertEqual(response.status_code, 200, response.text)
@@ -83,7 +83,7 @@ class ImageTasksApiTests(unittest.TestCase):
         response = self.client.post(
             "/api/image-tasks/edits",
             headers=AUTH_HEADERS,
-            data={"client_task_id": "edit-1", "prompt": "edit", "model": "gpt-image-2"},
+            data={"client_task_id": "edit-1", "prompt": "edit", "model": "gpt-image-2.5"},
             files=[
                 ("image", ("one.png", b"one", "image/png")),
                 ("image", ("two.png", b"two", "image/png")),

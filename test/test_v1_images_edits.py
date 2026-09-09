@@ -42,7 +42,7 @@ class ImageEditsTests(unittest.TestCase):
             f"{BASE_URL}/v1/images/edits",
             headers={"Authorization": f"Bearer {AUTH_KEY}"},
             data={
-                "model": "gpt-image-2",
+                "model": "gpt-image-2.5",
                 "prompt": "参考输入图片，保持人物主体和二次元插画风格不变，让女孩怀里抱着一只可爱的小猫，画面自然协调。",
                 "n": "1",
                 "response_format": "b64_json",
@@ -72,7 +72,7 @@ class ImageEditsTests(unittest.TestCase):
             f"{BASE_URL}/v1/images/edits",
             headers={"Authorization": f"Bearer {AUTH_KEY}"},
             data={
-                "model": "gpt-image-2",
+                "model": "gpt-image-2.5",
                 "prompt": "请提取两张输入界面截图中的 6 个任务，并把这 6 个任务整合排版到同一张图里，做成一张清晰的中文任务总览海报，标题明确，六个任务分区展示，版面整洁。",
                 "n": "1",
                 "response_format": "b64_json",

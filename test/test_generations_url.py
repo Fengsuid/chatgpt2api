@@ -6,7 +6,7 @@ def main() -> None:
         "/v1/images/generations",
         {
             "prompt": "一只橘猫坐在窗边，午后阳光，写实摄影",
-            "model": "gpt-image-2",
+            "model": "gpt-image-2.5",
             "n": 1,
             "response_format": "url",
         },

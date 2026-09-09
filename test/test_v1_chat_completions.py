@@ -63,7 +63,7 @@ class ChatCompletionsTests(unittest.TestCase):
             f"{BASE_URL}/v1/chat/completions",
             headers={"Authorization": f"Bearer {AUTH_KEY}"},
             json={
-                "model": "gpt-image-2",
+                "model": "gpt-image-2.5",
                 "messages": [
                     {"role": "user", "content": "我想做一张南京城市宣传海报图。"},
                 ],
@@ -86,7 +86,7 @@ class ChatCompletionsTests(unittest.TestCase):
             f"{BASE_URL}/v1/chat/completions",
             headers={"Authorization": f"Bearer {AUTH_KEY}"},
             json={
-                "model": "gpt-image-2",
+                "model": "gpt-image-2.5",
                 "stream": True,
                 "messages": [
                     {"role": "user", "content": "我想做一张南京城市宣传海报图。"},

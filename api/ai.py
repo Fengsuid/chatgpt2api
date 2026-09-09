@@ -19,7 +19,7 @@ from services.protocol import (
 
 class ImageGenerationRequest(BaseModel):
     prompt: str = Field(..., min_length=1)
-    model: str = "gpt-image-2"
+    model: str = "gpt-image-2.5"
     n: int = Field(default=1, ge=1, le=4)
     size: str | None = None
     response_format: str = "b64_json"
@@ -93,7 +93,7 @@ def create_router() -> APIRouter:
             image: list[UploadFile] | None = File(default=None),
             image_list: list[UploadFile] | None = File(default=None, alias="image[]"),
             prompt: str = Form(...),
-            model: str = Form(default="gpt-image-2"),
+            model: str = Form(default="gpt-image-2.5"),
             n: int = Form(default=1),
             size: str | None = Form(default=None),
             response_format: str = Form(default="b64_json"),

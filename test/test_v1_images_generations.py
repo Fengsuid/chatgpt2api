@@ -19,7 +19,7 @@ class ImageGenerationsTests(unittest.TestCase):
             f"{BASE_URL}/v1/images/generations",
             headers={"Authorization": f"Bearer {AUTH_KEY}"},
             json={
-                "model": "gpt-image-2",
+                "model": "gpt-image-2.5",
                 "prompt": "我想做一张南京城市宣传海报图。",
                 "n": 1,
                 "response_format": "b64_json",
@@ -46,7 +46,7 @@ class ImageGenerationsTests(unittest.TestCase):
             f"{BASE_URL}/v1/images/generations",
             headers={"Authorization": f"Bearer {AUTH_KEY}"},
             json={
-                "model": "gpt-image-2",
+                "model": "gpt-image-2.5",
                 "prompt": "我想做一张南京城市宣传海报图。",
                 "n": 1,
                 "response_format": "b64_json",

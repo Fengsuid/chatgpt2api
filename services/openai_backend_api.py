@@ -37,7 +37,7 @@ class ChatRequirements:
 DEFAULT_CLIENT_VERSION = "prod-be885abbfcfe7b1f511e88b3003d9ee44757fbad"
 DEFAULT_CLIENT_BUILD_NUMBER = "5955942"
 DEFAULT_POW_SCRIPT = "https://chatgpt.com/backend-api/sentinel/sdk.js"
-CODEX_IMAGE_MODEL = "codex-gpt-image-2"
+CODEX_IMAGE_MODEL = "codex-gpt-image-2.5"
 
 
 class OpenAIBackendAPI:
@@ -418,8 +418,8 @@ class OpenAIBackendAPI:
         model = str(model or "").strip()
         if not model:
             return "auto"
-        if model == "gpt-image-2":
-            return "gpt-5-3"
+        if model == "gpt-image-2.5":
+            return "gpt-5-5"
         if model == CODEX_IMAGE_MODEL:
             return model
         return "auto"

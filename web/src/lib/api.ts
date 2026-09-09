@@ -2,7 +2,7 @@ import { httpRequest, request } from "@/lib/request";
 
 export type AccountType = string;
 export type AccountStatus = "正常" | "限流" | "异常" | "禁用";
-export type ImageModel = "gpt-image-2" | "codex-gpt-image-2";
+export type ImageModel = "gpt-image-2.5" | "codex-gpt-image-2.5";
 export type AuthRole = "admin" | "user";
 
 export type Account = {

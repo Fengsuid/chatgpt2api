@@ -194,7 +194,7 @@ class ImageTaskService:
                 "owner_id": owner,
                 "status": TASK_STATUS_QUEUED,
                 "mode": mode,
-                "model": _clean(payload.get("model"), "gpt-image-2"),
+                "model": _clean(payload.get("model"), "gpt-image-2.5"),
                 "size": _clean(payload.get("size")),
                 "created_at": now,
                 "updated_at": now,
@@ -206,7 +206,7 @@ class ImageTaskService:
         if should_start:
             thread = threading.Thread(
                 target=self._run_task,
-                args=(key, mode, payload, dict(identity), _clean(payload.get("model"), "gpt-image-2")),
+                args=(key, mode, payload, dict(identity), _clean(payload.get("model"), "gpt-image-2.5")),
                 name=f"image-task-{task_id[:16]}",
                 daemon=True,
             )
@@ -328,7 +328,7 @@ class ImageTaskService:
                 "owner_id": owner,
                 "status": status,
                 "mode": "edit" if item.get("mode") == "edit" else "generate",
-                "model": _clean(item.get("model"), "gpt-image-2"),
+                "model": _clean(item.get("model"), "gpt-image-2.5"),
                 "size": _clean(item.get("size")),
                 "created_at": _clean(item.get("created_at"), _now_iso()),
                 "updated_at": _clean(item.get("updated_at"), _clean(item.get("created_at"), _now_iso())),

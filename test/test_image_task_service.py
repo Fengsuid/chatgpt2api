@@ -49,7 +49,7 @@ class ImageTaskServiceTests(unittest.TestCase):
                 OWNER,
                 client_task_id="task-1",
                 prompt="cat",
-                model="gpt-image-2",
+                model="gpt-image-2.5",
                 size=None,
                 base_url="http://local.test",
             )
@@ -57,7 +57,7 @@ class ImageTaskServiceTests(unittest.TestCase):
                 OWNER,
                 client_task_id="task-1",
                 prompt="cat",
-                model="gpt-image-2",
+                model="gpt-image-2.5",
                 size=None,
                 base_url="http://local.test",
             )
@@ -75,7 +75,7 @@ class ImageTaskServiceTests(unittest.TestCase):
                 OWNER,
                 client_task_id="private-task",
                 prompt="cat",
-                model="gpt-image-2",
+                model="gpt-image-2.5",
                 size=None,
                 base_url="http://local.test",
             )
@@ -94,7 +94,7 @@ class ImageTaskServiceTests(unittest.TestCase):
                 OWNER,
                 client_task_id="persisted-task",
                 prompt="cat",
-                model="gpt-image-2",
+                model="gpt-image-2.5",
                 size=None,
                 base_url="http://local.test",
             )
@@ -119,7 +119,7 @@ class ImageTaskServiceTests(unittest.TestCase):
                                 "owner_id": "owner-1",
                                 "status": "queued",
                                 "mode": "generate",
-                                "model": "gpt-image-2",
+                                "model": "gpt-image-2.5",
                                 "created_at": "2099-01-01 00:00:00",
                                 "updated_at": "2099-01-01 00:00:00",
                             },
@@ -128,7 +128,7 @@ class ImageTaskServiceTests(unittest.TestCase):
                                 "owner_id": "owner-1",
                                 "status": "running",
                                 "mode": "generate",
-                                "model": "gpt-image-2",
+                                "model": "gpt-image-2.5",
                                 "created_at": "2099-01-01 00:00:00",
                                 "updated_at": "2099-01-01 00:00:00",
                             },

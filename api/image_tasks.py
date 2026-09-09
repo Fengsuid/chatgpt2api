@@ -13,7 +13,7 @@ from services.log_service import LoggedCall
 class ImageGenerationTaskRequest(BaseModel):
     client_task_id: str = Field(..., min_length=1)
     prompt: str = Field(..., min_length=1)
-    model: str = "gpt-image-2"
+    model: str = "gpt-image-2.5"
     size: str | None = None
 
 
@@ -69,7 +69,7 @@ def create_router() -> APIRouter:
         image_list: list[UploadFile] | None = File(default=None, alias="image[]"),
         client_task_id: str = Form(...),
         prompt: str = Form(...),
-        model: str = Form(default="gpt-image-2"),
+        model: str = Form(default="gpt-image-2.5"),
         size: str | None = Form(default=None),
     ):
         identity = require_identity(authorization)
